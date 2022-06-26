@@ -10,6 +10,7 @@ const print = (msg) => console.log(msg);
 describe("Greeter", function () {
   let airDopToken;
   let swapContract;
+  let airDopContract;
   let amount = toWei('1000000');
   let firstSigner;
   let elementAddresses;
@@ -17,6 +18,8 @@ describe("Greeter", function () {
 
   const oneMillion = 1000000;
   const rate = 100;
+  const airDopName = "AirDop";
+  const airDopSymbol = "AD";
 
   before("init contracts", async function () {
     elementAddresses = await ethers.getSigners();
@@ -29,6 +32,10 @@ describe("Greeter", function () {
 
     airDopTokenAddress = swapContract.airDopToken();
     airDopToken = (await ethers.getContractFactory("AirDopToken")).attach(airDopTokenAddress);
+
+    const AirDop = await ethers.getContractFactory("AirDop");
+    airDopContract = await AirDop.deploy(airDopName, airDopSymbol);
+    await airDopContract.deployed();
 
   });
 
@@ -58,4 +65,15 @@ describe("Greeter", function () {
     const newBalance = await airDopToken.balanceOf(elementAddresses[1].address);
     expect(newBalance).to.equal(toWei(1900));
   });
+
+  it("Claim NFT", async function () {
+    await airDopContract.connect(elementAddresses[0]).addClaim(elementAddresses[1].address);
+    await airDopContract.connect(elementAddresses[1]).claim();
+    const balance = await airDopContract.balanceOf(elementAddresses[1].address);
+    expect(balance).to.equal(1);
+
+    // const tokenURI = await airDopContract.getTokenURI(1);
+    // print(`tokenURI : ${tokenURI}`);
+  });
+
 }); 
